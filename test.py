@@ -62,4 +62,4 @@ if __name__ == "__main__":
             print("got:\n{0}".format(t_out))
             exit(0)
         else:
-            print("test {0} passed".format(t_name))
+            print("{0} passed".format(t_name))

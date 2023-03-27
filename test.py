@@ -1,6 +1,6 @@
 import sys, subprocess
 
-
+# new comparison courtecy of jakepink08
 def are_different(t_out, e_out):
     t_out = t_out.split('\n')
     e_out = e_out.split('\n')

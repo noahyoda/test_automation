@@ -1,22 +1,58 @@
 import sys, subprocess
 
-# compare output of test and expected output
+
 def are_different(t_out, e_out):
     t_out = t_out.split('\n')
     e_out = e_out.split('\n')
 
-    reg = "\[\d\] \([0-9]+\)"
-
+    # make sure the two outputs have the same number of lines
     if len(t_out) != len(e_out):
+        print(f"\nFAIL\nThe number of lines did not match")
+        print(f"The number of line in output was {len(t_out)} the number expected was {len(e_out)}\n")
         return True
-    for i in range(len(t_out)):
-        if t_out[i] != e_out[i]:
-            # if contains reg ignore and check rest are equal
-            if reg in t_out[i] and reg in e_out[i]:
-                t_out[i] = t_out[i].replace(reg, "")
-                e_out[i] = e_out[i].replace(reg, "")
-                if t_out[i] != e_out[i]:
+    
+    #loop over each line in the two outputs
+    lineNum = 0
+    while lineNum < len(t_out):
+        testWords = t_out[lineNum].split(" ")
+        expectedWords = e_out[lineNum].split(" ")
+        
+        ##Test for the ps command. These outputs will be different and can be ignored. 
+        # However the running states of any mysplit processes in the output of the /bin/ps command should be identical.
+        #The /bin/ps command always end in /bin/ps a so look for this to exit skipping loop
+        lineString = "".join(t_out[lineNum])
+        times_hit = 0
+        if lineString == "tsh> /bin/ps a":
+            while times_hit < 2:
+                ##ensure mysplit processes have the same state
+                if testWords[-2] == "./mysplit":
+                    if lineString[17:20] != "".join(e_out[lineNum][17:20]):
+                        print("\nFAIL\n The process states of mysplit did not match the expected output\n")
+                        return True
+                if t_out[lineNum][-1] == "a" and t_out[lineNum].split(" ")[-2] == "/bin/ps":
+                    times_hit+=1
+                lineNum+=1
+                
+            
+        if (len(testWords) != len(expectedWords)):
+            print(f"\nFAIL\nThe number of words in line {lineNum + 1} did not match")
+            print(f"The number of words in line {lineNum + 1} of output was {len(testWords)} the expected number was {len(expectedWords)}")
+            print("Make sure to check for extra whitespaces\n")
+            return True
+
+        #loop over every word in each line
+        for word in range(len(testWords)):
+            if testWords[word] != expectedWords[word]:
+                # only pid numbers should be different and these number start with ( and end with ) so ignore these words
+                if testWords[word].startswith("(") and testWords[word].endswith(")") and expectedWords[word].startswith("(") and expectedWords[word].endswith(")"):
+                    pass
+                else:
+                    print(f"\nFAIL\nThe word number {word + 1} did not match in line number {lineNum +1}")
+                    print(f"The word outputed was \"{testWords[word]}\" the word expected was \"{expectedWords[word]}\"\n")
                     return True
+        lineNum+=1
+
+
     return False
 
 # runs make clean and rebuilds project

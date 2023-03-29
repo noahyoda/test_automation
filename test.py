@@ -1,18 +1,20 @@
 import sys, subprocess
 
-# new comparison courtecy of jakepink08
 def are_different(t_out, e_out):
     t_out = t_out.split('\n')
     e_out = e_out.split('\n')
 
     # make sure the two outputs have the same number of lines
-    if len(t_out) != len(e_out):
+    if len(t_out) != len(e_out) and ("/ps a" not in t_out or "/ps a" not in e_out):
+        print("inside t" if "ps" in t_out else "outside t")
+        print("inised e" if "ps" in e_out else "outside e")
         print(f"\nFAIL\nThe number of lines did not match")
         print(f"The number of line in output was {len(t_out)} the number expected was {len(e_out)}\n")
         return True
     
     #loop over each line in the two outputs
     lineNum = 0
+    ignore_ps = False
     while lineNum < len(t_out):
         testWords = t_out[lineNum].split(" ")
         expectedWords = e_out[lineNum].split(" ")
@@ -22,7 +24,9 @@ def are_different(t_out, e_out):
         #The /bin/ps command always end in /bin/ps a so look for this to exit skipping loop
         lineString = "".join(t_out[lineNum])
         times_hit = 0
-        if lineString == "tsh> /bin/ps a":
+        if "/bin/ps" in lineString:
+            # ignore until next tsh> prompt
+            ignore_ps = True
             while times_hit < 2:
                 ##ensure mysplit processes have the same state
                 if testWords[-2] == "./mysplit":
